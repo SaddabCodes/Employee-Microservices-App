@@ -1,3 +1,13 @@
 spring:
   application:
     name: Employee
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/microservice_employee
+    username: root
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
