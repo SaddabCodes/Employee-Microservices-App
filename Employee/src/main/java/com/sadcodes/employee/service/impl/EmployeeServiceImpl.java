@@ -71,10 +71,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDto> getAllEmployees() {
         List<Employee> employee = employeeRepository.findAll();
-        if (employee.isEmpty()){
+        if (employee.isEmpty()) {
             throw new ResourceNotFoundException("Employee not found");
         }
         return employee.stream().map(emp -> modelMapper.map(emp, EmployeeDto.class))
                 .toList();
+    }
+
+    @Override
+    public EmployeeDto getEmployeeByEmpCodeAndCompanyName(String empCode, String companyName) {
+        Employee employee = employeeRepository.findByEmpCodeAndCompanyName(empCode, companyName)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Employee not found with empCode " + empCode + " and companyName " + companyName));
+        return modelMapper.map(employee,EmployeeDto.class);
     }
 }
