@@ -31,13 +31,25 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto updateEmployeeDto(Long id, EmployeeDto employeeDto) {
-        if (id == null || employeeDto.getId() == null) {
+
+        if (id == null) {
             throw new BadRequestException("Please provide employee id");
         }
-        employeeRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: "+id));
-        Employee entity = modelMapper.map(employeeDto, Employee.class);
-        Employee updateEmployee = employeeRepository.save(entity);
-        return modelMapper.map(updateEmployee, EmployeeDto.class);
+
+        Employee existingEmployee = employeeRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Employee not found with id: " + id)
+                );
+
+        // Update fields manually
+        existingEmployee.setEmpName(employeeDto.getEmpName());
+        existingEmployee.setEmpEmail(employeeDto.getEmpEmail());
+        existingEmployee.setEmpCode(employeeDto.getEmpCode());
+        existingEmployee.setCompanyName(employeeDto.getCompanyName());
+
+        Employee updatedEmployee = employeeRepository.save(existingEmployee);
+
+        return modelMapper.map(updatedEmployee, EmployeeDto.class);
     }
 
     @Override
