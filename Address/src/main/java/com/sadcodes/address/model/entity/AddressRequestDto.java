@@ -1,7 +1,8 @@
 package com.sadcodes.address.model.entity;
 
 import com.sadcodes.address.model.enums.AddressType;
-import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,19 +12,12 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name = "address")
-public class Address {
+public class AddressRequestDto {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
     private Long id;
-    private Long empId;
     private String street;
     private String pinCode;
     private Long city;
     private Long country;
-
-    @Enumerated(EnumType.STRING)
     private AddressType addressType;
 }

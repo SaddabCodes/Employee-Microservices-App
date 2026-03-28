@@ -1,4 +1,6 @@
 package com.sadcodes.address.model.enums;
 
-public class Address {
+public enum AddressType {
+    PERMANENT,
+    TEMPORARY
 }

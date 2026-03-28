@@ -1,4 +1,4 @@
-package com.sadcodes.employee.exception;
+package com.sadcodes.address.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
