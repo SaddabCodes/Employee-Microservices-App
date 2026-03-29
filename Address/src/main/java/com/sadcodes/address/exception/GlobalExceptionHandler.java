@@ -1,8 +1,6 @@
 package com.sadcodes.address.exception;
 
-import com.sadcodes.employee.exception.BadRequestException;
-import com.sadcodes.employee.exception.ErrorResponse;
-import com.sadcodes.employee.exception.MissingParameterException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse>handleResourceNotFoundException(ResourceNotFoundException ex){
+    public ResponseEntity<com.sadcodes.address.exception.ErrorResponse>handleResourceNotFoundException(ResourceNotFoundException ex){
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),ex.getHttpStatus());
         return new ResponseEntity<>(errorResponse,ex.getHttpStatus());
 

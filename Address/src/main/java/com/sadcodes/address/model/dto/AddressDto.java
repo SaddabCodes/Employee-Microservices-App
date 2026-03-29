@@ -10,15 +10,12 @@ import lombok.*;
 @NoArgsConstructor
 public class AddressDto {
 
-
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
     private Long id;
     private Long empId;
     private String street;
-    private String pinCode;
-    private Long city;
-    private Long country;
+    private Long pinCode;
+    private String  city;
+    private String  country;
 
     @Enumerated(EnumType.STRING)
     private AddressType addressType;

@@ -16,8 +16,8 @@ public class AddressRequestDto {
 
     private Long id;
     private String street;
-    private String pinCode;
-    private Long city;
-    private Long country;
+    private Long pinCode;
+    private String  city;
+    private String  country;
     private AddressType addressType;
 }

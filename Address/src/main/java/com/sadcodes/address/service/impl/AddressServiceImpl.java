@@ -1,6 +1,7 @@
 package com.sadcodes.address.service.impl;
 
 import com.sadcodes.address.model.dto.AddressDto;
+import com.sadcodes.address.model.entity.Address;
 import com.sadcodes.address.model.entity.AddressRequest;
 import com.sadcodes.address.repository.AddressRepository;
 import com.sadcodes.address.service.AddressService;
@@ -14,16 +15,30 @@ import java.util.List;
 @Service
 public class AddressServiceImpl implements AddressService {
 
-   private final AddressRepository addressRepository;
-   private final ModelMapper modelMapper;
+    private final AddressRepository addressRepository;
+    private final ModelMapper modelMapper;
 
     @Override
-    public AddressDto savedAddress(AddressRequest addressRequest) {
-        return null;
+    public List<AddressDto> savedAddress(AddressRequest addressRequest) {
+        // TODO -> check if employee already exist
+        List<Address> listToSave = addressRequest.getAddressRequestDtoList()
+                .stream()
+                .map(dto -> {
+                    Address address = modelMapper.map(dto, Address.class);
+                    address.setEmpId(addressRequest.getEmpId());
+                    return address;
+                })
+                .toList();
+        List<Address> savedAddress = addressRepository.saveAll(listToSave);
+        return savedAddress.
+                stream()
+                .map(dto -> modelMapper.map(dto, AddressDto.class))
+                .toList();
     }
 
     @Override
     public AddressDto updateAddress(AddressRequest addressRequest) {
+
         return null;
     }
 

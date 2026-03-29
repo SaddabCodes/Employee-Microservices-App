@@ -6,7 +6,7 @@ import com.sadcodes.address.model.entity.AddressRequest;
 import java.util.List;
 
 public interface AddressService {
-    AddressDto savedAddress(AddressRequest addressRequest);
+    List<AddressDto> savedAddress(AddressRequest addressRequest);
     AddressDto updateAddress(AddressRequest addressRequest);
     AddressDto getSingleAddress(Long id);
     List<AddressDto>getAllAddress();
