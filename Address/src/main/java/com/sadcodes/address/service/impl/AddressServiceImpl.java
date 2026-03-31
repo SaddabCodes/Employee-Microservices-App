@@ -1,7 +1,10 @@
 package com.sadcodes.address.service.impl;
 
+import com.sadcodes.address.client.EmployeeClient;
+import com.sadcodes.address.exception.BadRequestException;
 import com.sadcodes.address.exception.ResourceNotFoundException;
 import com.sadcodes.address.model.dto.AddressDto;
+import com.sadcodes.address.model.dto.EmployeeDto;
 import com.sadcodes.address.model.entity.Address;
 import com.sadcodes.address.model.entity.AddressRequest;
 import com.sadcodes.address.repository.AddressRepository;
@@ -11,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
@@ -20,16 +24,19 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class AddressServiceImpl implements AddressService {
 
     Logger logger = LoggerFactory.getLogger(AddressServiceImpl.class);
 
     private final AddressRepository addressRepository;
     private final ModelMapper modelMapper;
+    private final EmployeeClient employeeClient;
 
     @Override
     public List<AddressDto> savedAddress(AddressRequest addressRequest) {
         // TODO -> check if employee already exist
+        EmployeeDto employee = employeeClient.getSingleEmployee(addressRequest.getEmpId());
 
         List<Address> listToSave = this.savedOrUpdateAddressRequest(addressRequest);
         List<Address> savedAddress = addressRepository.saveAll(listToSave);
@@ -43,7 +50,7 @@ public class AddressServiceImpl implements AddressService {
     public List<AddressDto> updateAddress(AddressRequest addressRequest) {
 
         if (addressRequest.getEmpId() == null) {
-            throw new IllegalArgumentException("empId must not be null");
+            throw new BadRequestException("empId must not be null");
         }
 
         List<Address> addressesByEmpId = addressRepository.findAllByEmpId(addressRequest.getEmpId());
@@ -123,7 +130,7 @@ public class AddressServiceImpl implements AddressService {
                         // 🔥 UPDATE CASE
                         address = addressRepository.findById(dto.getId())
                                 .orElseThrow(() ->
-                                        new RuntimeException("Address not found with id: " + dto.getId())
+                                        new ResourceNotFoundException("Address not found with id: " + dto.getId())
                                 );
 
                         // update existing entity

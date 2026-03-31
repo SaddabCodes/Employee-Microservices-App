@@ -42,4 +42,9 @@ public class AddressController {
         addressService.deleteAddress(id);
         return new ResponseEntity<>("Address deleted successful",HttpStatus.OK);
     }
+
+    @GetMapping("/by-employee/{empId}")
+    public ResponseEntity<List<AddressDto>>getAddressByEmpId(@PathVariable Long empId){
+        return new ResponseEntity<>(addressService.getAddressByEmpId(empId),HttpStatus.OK);
+    }
 }
