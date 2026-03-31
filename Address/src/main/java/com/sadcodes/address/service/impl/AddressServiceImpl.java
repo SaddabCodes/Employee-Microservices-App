@@ -103,6 +103,14 @@ public class AddressServiceImpl implements AddressService {
         addressRepository.delete(address);
     }
 
+    @Override
+    public List<AddressDto> getAddressByEmpId(Long empId) {
+        List<Address> addressByEmpId = addressRepository.findAllByEmpId(empId);
+        return addressByEmpId.stream()
+                .map((address) -> modelMapper.map(address, AddressDto.class))
+                .toList();
+    }
+
     private List<Address> savedOrUpdateAddressRequest(AddressRequest addressRequest) {
 
         return addressRequest.getAddressRequestDtoList()
