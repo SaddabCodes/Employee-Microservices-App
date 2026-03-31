@@ -1,4 +1,4 @@
-package com.sadcodes.address.exception;
+package com.sadcodes.employee.exception;
 
 import lombok.Getter;
 import lombok.Setter;

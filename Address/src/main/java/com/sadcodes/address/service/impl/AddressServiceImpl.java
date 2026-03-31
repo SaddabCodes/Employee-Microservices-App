@@ -49,9 +49,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public List<AddressDto> updateAddress(AddressRequest addressRequest) {
 
-        if (addressRequest.getEmpId() == null) {
-            throw new BadRequestException("empId must not be null");
-        }
+        EmployeeDto employee = employeeClient.getSingleEmployee(addressRequest.getEmpId());
 
         List<Address> addressesByEmpId = addressRepository.findAllByEmpId(addressRequest.getEmpId());
 

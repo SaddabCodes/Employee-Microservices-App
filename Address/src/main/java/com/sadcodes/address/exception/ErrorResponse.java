@@ -1,6 +1,9 @@
 package com.sadcodes.address.exception;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
@@ -8,15 +11,18 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ErrorResponse {
 
     private String message;
     private HttpStatus httpStatus;
     private LocalDateTime localDateTime;
 
-    public ErrorResponse(String message,HttpStatus httpStatus){
-        this.message= message;
-        this.httpStatus= httpStatus;
+    public ErrorResponse(String message, HttpStatus httpStatus) {
+        this.message = message;
+        this.httpStatus = httpStatus;
         this.localDateTime = LocalDateTime.now();
     }
 

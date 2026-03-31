@@ -1,12 +1,10 @@
-package com.sadcodes.address.config;
+package com.sadcodes.employee.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sadcodes.address.exception.BadRequestException;
-import com.sadcodes.address.exception.CustomException;
-import com.sadcodes.address.exception.ErrorResponse;
+import com.sadcodes.employee.exception.CustomException;
+import com.sadcodes.employee.exception.ErrorResponse;
 import feign.Response;
 import feign.codec.ErrorDecoder;
-import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.io.InputStream;

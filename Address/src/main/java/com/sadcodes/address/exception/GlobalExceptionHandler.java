@@ -34,21 +34,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse>handleGlobalException(CustomException ex){
+    public ResponseEntity<ErrorResponse>handleCustomException(CustomException ex){
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),ex.getStatus());
         return new ResponseEntity<>(errorResponse,ex.getStatus());
 
-    }
-
-    @ExceptionHandler(FeignException.class)
-    public ResponseEntity<ErrorResponse> handleFeignException(FeignException ex) {
-        Throwable cause = ex.getCause();
-        if (cause instanceof CustomException customException) {
-            return handleGlobalException(customException);
-        }
-        // Generic fallback for other Feign exceptions
-        ErrorResponse errorResponse = new ErrorResponse("Error during microservice communication", HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
