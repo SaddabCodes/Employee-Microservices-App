@@ -2,17 +2,18 @@ package com.sadcodes.auth.service;
 
 import com.sadcodes.auth.model.UserEntity;
 import com.sadcodes.auth.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
+
 @Service
 public class MyUserDetailService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private  UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -20,4 +21,6 @@ public class MyUserDetailService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return new MyUserDetails(user);
     }
+
+
 }
