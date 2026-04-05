@@ -2,8 +2,6 @@ package com.sadcodes.auth.service;
 
 import com.sadcodes.auth.model.UserEntity;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,12 +17,13 @@ public class MyUserDetails implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Arrays.stream(userEntity.getRoles().split(","))
-                .map(auth -> new SimpleGrantedAuthority(auth))
+                .map(String::trim)
+                .map(SimpleGrantedAuthority::new)
                 .toList();
     }
 
     @Override
-    public @Nullable String getPassword() {
+    public String getPassword() {
         return userEntity.getPassword();
     }
 

@@ -1,19 +1,24 @@
 package com.sadcodes.auth.config;
 
 import com.sadcodes.auth.service.MyUserDetailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final MyUserDetailService myUserDetailService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -21,26 +26,21 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
-        httpSecurity.csrf(c -> c.disable())
-                .authorizeHttpRequests(http ->
-                        http.requestMatchers("/auth/register").permitAll()
-                                .anyRequest().authenticated())
-                .userDetailsService(userDetailsService())
-                .httpBasic(Customizer.withDefaults());
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(http -> http
+                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .anyRequest().authenticated())
+                .userDetailsService(myUserDetailService)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
-
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
-
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new MyUserDetailService();
     }
 }

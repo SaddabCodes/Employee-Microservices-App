@@ -88,7 +88,6 @@ public class JwtUtil {
         }
     }
 
-    // ❌ FIXED (Your method was wrong)
     public Date getExpirationDateFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
