@@ -1,11 +1,11 @@
 package com.sadcodes.auth.cotroller;
 
+import com.sadcodes.auth.exception.BadRequestException;
 import com.sadcodes.auth.model.JwtTokenResponse;
 import com.sadcodes.auth.model.LoginRequest;
 import com.sadcodes.auth.model.UserDto;
 import com.sadcodes.auth.model.UserEntity;
 import com.sadcodes.auth.service.UserService;
-import com.sadcodes.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,30 +27,22 @@ public class UserController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
 
-    @PostMapping("/register")
+    @PostMapping("/register-user")
     public ResponseEntity<UserDto> registerUser(@RequestBody UserEntity userEntity) {
         return new ResponseEntity<>(userService.savedUser(userEntity), HttpStatus.CREATED);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<JwtTokenResponse> login(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-        );
 
-        String token = jwtUtil.generateToken(authentication);
-        JwtTokenResponse tokenResponse = new JwtTokenResponse();
-        tokenResponse.setToken(token);
-        tokenResponse.setType("Bearer");
-        tokenResponse.setValidUntil(Instant.ofEpochMilli(jwtUtil.getExpirationDateFromToken(token).getTime()).toString());
-
-        return ResponseEntity.ok(tokenResponse);
+    @PostMapping("/generate-token")
+    public JwtTokenResponse generateToken(@RequestBody LoginRequest loginRequest){
+        Authentication authenticate = authenticationManager.authenticate
+                (new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        if (authenticate.isAuthenticated()){
+            return userService.generateToken(loginRequest.getUsername());
+        }else {
+            throw new BadRequestException("Invalid Credential");
+        }
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<String> me(Authentication authentication) {
-        return ResponseEntity.ok("Authenticated as " + authentication.getName());
-    }
 }
