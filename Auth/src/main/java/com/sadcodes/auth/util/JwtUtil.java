@@ -21,38 +21,34 @@ public class JwtUtil {
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationMs;
 
-    // ✅ Generate token from Authentication
     public String generateToken(Authentication authentication) {
         return generateToken(authentication.getName());
     }
 
-    // ✅ Generate token from username
     public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey()) // OK (still valid)
+                .signWith(getSigningKey())
                 .compact();
     }
 
-    // ✅ Extract username (UPDATED)
     public String getUsernameFromJwt(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())   // ✅ NEW method
+                .verifyWith(getSigningKey())
                 .build()
-                .parseSignedClaims(token)      // ✅ NEW method
+                .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
     }
 
-    // ✅ Validate token (UPDATED)
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey())   // ✅ NEW
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseSignedClaims(token);     // ✅ NEW
+                    .parseSignedClaims(token);
             return true;
 
         } catch (MalformedJwtException ex) {
@@ -69,13 +65,11 @@ public class JwtUtil {
         return false;
     }
 
-    // ✅ Signing key
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // ✅ Check expiration (UPDATED)
     public boolean isTokenExpired(String token) {
         try {
             Jwts.parser()
@@ -94,6 +88,6 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getExpiration();   // ✅ Correct way
+                .getExpiration();
     }
 }
