@@ -8,6 +8,17 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="EurekaServer" />
+        <module name="ApiGateway" />
+      </profile>
+      <profile name="Annotation profile for Auth" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
+        </processorPath>
+        <module name="Auth" />
       </profile>
       <profile name="Annotation profile for Employee" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -20,20 +31,12 @@
         <module name="Address" />
         <module name="Employee" />
       </profile>
-      <profile name="Annotation profile for Auth" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.44/lombok-1.18.44.jar" />
-        </processorPath>
-        <module name="Auth" />
-      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Address" options="-parameters" />
+      <module name="ApiGateway" options="-parameters" />
       <module name="Auth" options="-parameters" />
       <module name="Employee" options="-parameters" />
       <module name="EurekaServer" options="-parameters" />
