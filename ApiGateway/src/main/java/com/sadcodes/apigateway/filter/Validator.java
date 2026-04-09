@@ -10,15 +10,15 @@ import java.util.function.Predicate;
 @Component
 public class Validator {
 
-
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    public static final List<String>endPoint = List.of("/register-user","/generate-token","/validate-token");
+    public static final List<String> endPoint = List.of(
+            "/auth/register-user",
+            "/auth/generate-token"
+    );
 
-    public Predicate<ServerHttpRequest> predicate = request->{
+    public Predicate<ServerHttpRequest> predicate = request -> {
         String requestPath = request.getURI().getPath();
-        return endPoint.stream()
-                .noneMatch(none-> antPathMatcher.match(none,requestPath));
-
+        return endPoint.stream().noneMatch(path -> antPathMatcher.match(path, requestPath));
     };
 }

@@ -22,7 +22,7 @@ spring:
                 - AuthFilter
 
             - id: AUTH
-              uri: http://localhost:8083
+              uri: lb://AUTH
               predicates:
                 - Path=/auth/**
 
