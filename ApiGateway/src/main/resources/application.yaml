@@ -4,25 +4,27 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        - id: EMPLOYEE
-          uri: lb://EMPLOYEE
-          predicates:
-            - Path=/employee/**
-          filters:
-            - AuthFilter
+      server:
+        webflux:
+          routes:
+            - id: EMPLOYEE
+              uri: lb://EMPLOYEE
+              predicates:
+                - Path=/employee/**
+              filters:
+                - AuthFilter
 
-        - id: ADDRESS
-          uri: lb://ADDRESS
-          predicates:
-            - Path=/addresses/**
-          filters:
-            - AuthFilter
+            - id: ADDRESS
+              uri: lb://ADDRESS
+              predicates:
+                - Path=/addresses/**
+              filters:
+                - AuthFilter
 
-        - id: AUTH
-          uri: http://localhost:8083
-          predicates:
-            - Path=/auth/**
+            - id: AUTH
+              uri: http://localhost:8083
+              predicates:
+                - Path=/auth/**
 
 eureka:
   client:
@@ -36,3 +38,6 @@ eureka:
 
 server:
   port: 9090
+
+jwt:
+  secret: "ajfwqejlfqwlei10923409312ljlwefaljfsajkldfjwsljs134qwfcs"
