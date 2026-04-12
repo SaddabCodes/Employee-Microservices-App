@@ -9,7 +9,7 @@ public interface AddressService {
     List<AddressDto> savedAddress(AddressRequest addressRequest);
     List<AddressDto> updateAddress(AddressRequest addressRequest);
     AddressDto getSingleAddress(Long id);
-    List<AddressDto>getAllAddress();
+    List<AddressDto>getAllAddress() throws InterruptedException;
     void deleteAddress(Long id);
     List<AddressDto>getAddressByEmpId(Long empId);
 }

@@ -11,7 +11,7 @@ public interface EmployeeService {
 
     void deleteEmployee(Long id);
 
-    EmployeeDto getSingleEmployee(Long id);
+    EmployeeDto getSingleEmployee(Long id) throws InterruptedException;
 
     List<EmployeeDto>getAllEmployees();
 

@@ -68,7 +68,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDto getSingleEmployee(Long id) {
+    public EmployeeDto getSingleEmployee(Long id) throws InterruptedException {
+        Thread.sleep(6000);
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Employee not found with id: " + id));

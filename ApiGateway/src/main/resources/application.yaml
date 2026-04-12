@@ -13,6 +13,10 @@ spring:
                 - Path=/employee/**
               filters:
                 - AuthFilter
+                - name: CircuitBreaker
+                  args:
+                    name: EMPLOYEE-SERVICE
+                    fallbackuri: forward:/employeeServiceFallback
 
             - id: ADDRESS
               uri: lb://ADDRESS
@@ -20,11 +24,58 @@ spring:
                 - Path=/addresses/**
               filters:
                 - AuthFilter
+                - name: CircuitBreaker
+                  args:
+                    name: ADDRESS-SERVICE
+                    fallbackuri: forward:/addressServiceFallback
 
             - id: AUTH
               uri: lb://AUTH
               predicates:
                 - Path=/auth/**
+
+resilience4j:
+  timelimiter:
+    instances:
+      EMPLOYEE-SERVICE:
+        timeout-duration: 5s
+      ADDRESS-SERVICE:
+        timeout-duration: 5s
+
+  circuitbreaker:
+    instances:
+      EMPLOYEE-SERVICE:
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        sliding-window-size: 5
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 6s
+        automatic-transition-from-open-to-half-open-enabled: true
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: COUNT_BASED
+
+      ADDRESS-SERVICE:
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        sliding-window-size: 5
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 6s
+        automatic-transition-from-open-to-half-open-enabled: true
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: COUNT_BASED
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
 
 eureka:
   client:
