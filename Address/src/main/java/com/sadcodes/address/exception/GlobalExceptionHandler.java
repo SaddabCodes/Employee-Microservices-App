@@ -2,6 +2,7 @@ package com.sadcodes.address.exception;
 
 
 import feign.FeignException;
+import feign.RetryableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +39,23 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),ex.getStatus());
         return new ResponseEntity<>(errorResponse,ex.getStatus());
 
+    }
+
+    @ExceptionHandler(RetryableException.class)
+    public ResponseEntity<ErrorResponse> handleRetryableException(RetryableException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Employee Service is down. Please try again later.",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(FeignException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.status());
+        HttpStatus finalStatus = status != null ? status : INTERNAL_SERVER_ERROR;
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), finalStatus);
+        return new ResponseEntity<>(errorResponse, finalStatus);
     }
 
     @ExceptionHandler(Exception.class)
