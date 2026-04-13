@@ -1,25 +1,20 @@
-# Employee Microservices Application
+# Employee Microservices App
 
-A Spring Boot-based microservices architecture for managing employees and their addresses, with JWT-based authentication.
+Spring Boot microservices demo with service discovery, API gateway, JWT-based authentication, and inter-service communication.
 
-## 📋 Table of Contents
+## Services Overview
 
-- [Architecture Overview](#architecture-overview)
-- [Microservices](#microservices)
-- [Technology Stack](#technology-stack)
-- [Prerequisites](#prerequisites)
-- [Setup & Installation](#setup--installation)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
-- [Service Communication](#service-communication)
-- [Project Structure](#project-structure)
+| Service | Port | Purpose | Discovery Name | Spring Boot |
+|---|---:|---|---|---|
+| EurekaServer | 8761 | Service registry | `EurekaServer` | 4.0.5 |
+| ApiGateway | 9090 | Single entry point, JWT validation, circuit breaker | `API-GATEWAY` | 3.5.13 |
+| Auth | 8083 | User registration and JWT token generation | `Auth` | 4.0.5 |
+| Employee | 8081 | Employee CRUD + fetch employee addresses | `Employee` | 4.0.3 |
+| Address | 8082 | Address CRUD by employee | `Address` | 4.0.3 |
 
----
+## Architecture
 
-## 🏗️ Architecture Overview
-
-This project demonstrates a distributed microservices architecture using Spring Boot and Spring Cloud. The system consists of **4 independent microservices** that communicate via REST APIs using OpenFeign, with Netflix Eureka for service discovery and registration.
+### Service Communication Pattern
 
 ```
                     ┌─────────────────┐
@@ -27,430 +22,306 @@ This project demonstrates a distributed microservices architecture using Spring 
                     │   Port: 8761    │
                     └────────┬────────┘
                              │
-              ┌──────────────┼──────────────┐
-              │              │              │
-    ┌─────────▼────┐  ┌─────▼──────┐  ┌────▼───────┐
-    │   Employee   │  │  Address   │  │    Auth    │
-    │  Port: 8081  │  │ Port: 8082 │  │ Port: 8083 │
-    └──────────────┘  └────────────┘  └────────────┘
+              ┌──────────────┼──────────────┬──────────────┐
+              │              │              │              │
+    ┌─────────▼────┐  ┌─────▼──────┐  ┌────▼───────┐  ┌───▼────────┐
+    │   Employee   │  │  Address   │  │    Auth    │  │ ApiGateway │
+    │  Port: 8081  │  │ Port: 8082 │  │ Port: 8083 │  │ Port: 9090 │
+    └──────────────┘  └────────────┘  └────────────┘  └────────────┘
 ```
 
----
+### Inter-Service Communication (OpenFeign)
 
-## 🔧 Microservices
+**Employee → Address Service:**
+- Uses Eureka discovery (`lb://ADDRESS`)
+- Calls: `GET /addresses/empId/{empId}`
+- Purpose: Enrich employee responses with address data
+- Error Handling: Tolerates Address service failures gracefully
 
-### 1. EurekaServer (`:8761`)
-Service registry and discovery server using Netflix Eureka. All microservices register with this server on startup.
+**Address → Employee Service:**
+- Uses explicit URL configuration
+- Calls: `GET /employee/{id}`
+- Purpose: Validates employee existence before saving addresses
+- Error Handling: Custom `CustomErrorDecoder` for Feign errors
 
-**Key Features:**
-- Service registration and discovery
-- Eureka Dashboard available at `http://localhost:8761`
-- Health monitoring of registered services
+### API Gateway Flow
 
----
-
-### 2. Employee Service (`:8081`)
-Core employee management service providing CRUD operations for employee records.
-
-**Key Features:**
-- Employee CRUD operations
-- Fetches address data from Address service via OpenFeign
-- Composite unique constraint on (empCode, companyName)
-- DTO mapping using ModelMapper
-
-**Database:** `microservice_employee` → `employees` table
-
----
-
-### 3. Address Service (`:8082`)
-Manages employee addresses with support for multiple addresses per employee (PERMANENT or TEMPORARY).
-
-**Key Features:**
-- Address CRUD operations
-- Validates employee existence via Feign call to Employee service
-- Supports delta updates (create/update/delete)
-- Custom error handling for Feign clients
-
-**Database:** `microservice_employee` → `address` table
-
----
-
-### 4. Auth Service (`:8083`)
-User registration and JWT token-based authentication service.
-
-**Key Features:**
-- User registration and login
-- JWT token generation and validation
-- Spring Security with stateless session management
-- BCrypt password encoding
-- Role-based access control
-
-**Database:** `microservice_employee` → `users` table
-
----
-
-## 💻 Technology Stack
-
-| Technology | Version |
-|------------|---------|
-| Java | 25 |
-| Spring Boot | 4.0.3 / 4.0.5 |
-| Spring Cloud | 2025.1.1 |
-| Spring Data JPA | Latest |
-| MySQL | 8.x |
-| Netflix Eureka | Service Discovery |
-| OpenFeign | Declarative REST Client |
-| Spring Security | Authentication & Authorization |
-| JWT (JJWT) | 0.13.0 |
-| Lombok | Boilerplate Reduction |
-| ModelMapper | 3.2.4 |
-| Maven | Build Tool |
-
----
-
-## 📦 Prerequisites
-
-Before running this project, ensure you have the following installed:
-
-- **Java Development Kit (JDK) 25** or higher
-- **Maven** 3.6+ for building projects
-- **MySQL Server** 8.x running on `localhost:3306`
-- **Git** (optional, for cloning)
-
----
-
-## 🚀 Setup & Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd Employee-Microservices-App
+```
+Client Request (port 9090)
+    ↓
+API Gateway
+    ↓
+[AuthFilter] → Validates JWT for /employee/** and /addresses/**
+    ↓
+[CircuitBreaker] → Protects against downstream failures
+    ↓
+Route to Microservice via Eureka (lb://SERVICE)
 ```
 
-### 2. Database Setup
+## Tech Stack
 
-Ensure MySQL is running and create the database:
+- Java 25
+- Spring Boot 4.0.3 (Employee, Address) / 4.0.5 (Auth, EurekaServer) / 3.5.13 (ApiGateway)
+- Spring Cloud 2025.1.1 (microservices) / 2025.0.1 (ApiGateway)
+- Spring Cloud Netflix Eureka (Service Discovery)
+- Spring Cloud OpenFeign (Inter-service Communication)
+- Spring Cloud Gateway (API Gateway with WebFlux)
+- Spring Security + JJWT 0.13.0
+- Resilience4j Circuit Breaker (ApiGateway)
+- Spring Boot Actuator (ApiGateway)
+- MySQL 8.x
+- Maven Wrapper (`mvnw` / `mvnw.cmd`)
+- Lombok (Boilerplate Reduction)
+- ModelMapper 3.2.4 (DTO-Entity Mapping)
+
+## Project Structure
+
+- `EurekaServer/`
+- `ApiGateway/`
+- `Auth/`
+- `Employee/`
+- `Address/`
+
+Each service is an independent Maven project (no root multi-module `pom.xml`).
+
+## Prerequisites
+
+- JDK 25
+- MySQL running locally
+- Maven is optional (wrapper included)
+
+## Database Setup
+
+All data services use the same database configured in `application.yaml|yml`:
+
+- **Database**: `microservice_employee`
+- **URL**: `jdbc:mysql://localhost:3306/microservice_employee`
+- **Username**: `root`
+- **Password**: `1234`
+- **JPA**: `ddl-auto=update`
+- **Tables**: `employees`, `address`, `users`
+
+Create database once:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS microservice_employee;
 ```
 
-Update database credentials in each service's `application.yaml` if your MySQL credentials differ:
+> **Note**: This project uses a shared database pattern for simplicity. In production microservices, each service should have its own database.
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/microservice_employee
-    username: root
-    password: 1234
+## How To Run
+
+Start services in this order:
+
+1. EurekaServer
+2. Auth
+3. Employee
+4. Address
+5. ApiGateway
+
+### Windows (PowerShell)
+
+```powershell
+cd EurekaServer; .\mvnw.cmd spring-boot:run
+cd ..\Auth; .\mvnw.cmd spring-boot:run
+cd ..\Employee; .\mvnw.cmd spring-boot:run
+cd ..\Address; .\mvnw.cmd spring-boot:run
+cd ..\ApiGateway; .\mvnw.cmd spring-boot:run
 ```
 
-### 3. Build All Services
+### macOS/Linux
 
 ```bash
-# Build EurekaServer
-cd EurekaServer
-mvn clean install
-
-# Build Employee Service
-cd ../Employee
-mvn clean install
-
-# Build Address Service
-cd ../Address
-mvn clean install
-
-# Build Auth Service
-cd ../Auth
-mvn clean install
+cd EurekaServer && ./mvnw spring-boot:run
+cd ../Auth && ./mvnw spring-boot:run
+cd ../Employee && ./mvnw spring-boot:run
+cd ../Address && ./mvnw spring-boot:run
+cd ../ApiGateway && ./mvnw spring-boot:run
 ```
 
----
+## Service Discovery
 
-## ▶️ Running the Application
+Eureka dashboard:
 
-**Important:** Start services in the following order:
+- `http://localhost:8761`
 
-### Step 1: Start EurekaServer
+All services are configured to register with Eureka (`defaultZone: http://localhost:8761/eureka`).
 
-```bash
-cd EurekaServer
-mvn spring-boot:run
-```
+## API Gateway
 
-Wait for EurekaServer to fully start (dashboard available at `http://localhost:8761`).
+Base URL:
 
-### Step 2: Start Employee Service
+- `http://localhost:9090`
 
-```bash
-cd Employee
-mvn spring-boot:run
-```
+### Routes
 
-### Step 3: Start Address Service
+| Path | Service | Auth Required | Circuit Breaker |
+|---|---|---|---|
+| `/auth/**` | Auth (lb://AUTH) | No | No |
+| `/employee/**` | Employee (lb://EMPLOYEE) | Yes (JWT) | Yes (5s timeout) |
+| `/addresses/**` | Address (lb://ADDRESS) | Yes (JWT) | Yes (5s timeout) |
 
-```bash
-cd Address
-mvn spring-boot:run
-```
+### JWT Authentication
 
-### Step 4: Start Auth Service
+- Header is mandatory for protected routes
+- Format must be: `Authorization: Bearer <token>`
+- Gateway validates JWT token using configured secret
 
-```bash
-cd Auth
-mvn spring-boot:run
-```
+### Circuit Breaker Configuration (Resilience4j)
 
-### Verify Services
+**Timeout Settings:**
+- Employee Service: 5 seconds
+- Address Service: 5 seconds
 
-After starting all services, verify they are registered in Eureka Dashboard: `http://localhost:8761`
+**Circuit Breaker Settings:**
+- Sliding window size: 5 calls
+- Minimum calls threshold: 5
+- Failure rate threshold: 50%
+- Wait duration in open state: 6 seconds
+- Auto-transition to half-open: Enabled
+- Calls in half-open state: 3
 
-All services should show as `UP` in the Eureka dashboard.
+**Fallback Endpoints:**
+- `/employeeServiceFallback` - Called when Employee service is unavailable
+- `/addressServiceFallback` - Called when Address service is unavailable
 
----
+### Management Endpoints
 
-## 📡 API Documentation
+The ApiGateway exposes Spring Boot Actuator endpoints:
 
-### Employee Service (`http://localhost:8081`)
+- `http://localhost:9090/actuator/health` - Service health
+- `http://localhost:9090/actuator/health/circuitbreakers` - Circuit breaker status
+- `http://localhost:9090/actuator/info` - Service info
+- `http://localhost:9090/actuator/metrics` - Service metrics
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/employee/save` | Create a new employee |
-| PUT | `/employee/update/{id}` | Update employee by ID |
-| DELETE | `/employee/delete/{id}` | Delete employee by ID |
-| GET | `/employee/{id}` | Get employee by ID (includes addresses) |
-| GET | `/employee/all` | Get all employees (includes addresses) |
-| GET | `/employee/get-by-emp-code-and-company-name` | Get employee by empCode and companyName |
+## Authentication Flow
 
-**Query Parameters for composite lookup:**
-- `empCode` - Employee code
-- `companyName` - Company name
+1. Register user
+2. Generate token
+3. Call protected endpoints with Bearer token via gateway
 
----
+### 1) Register
 
-### Address Service (`http://localhost:8082`)
+```http
+POST /auth/register-user
+Host: localhost:9090
+Content-Type: application/json
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/addresses/save` | Save address(es) for an employee |
-| PUT | `/addresses/update` | Update address(es) for an employee |
-| GET | `/addresses/{addressId}` | Get address by ID |
-| GET | `/addresses/all-address` | Get all addresses |
-| DELETE | `/addresses/delete/{addressId}` | Delete address by ID |
-| GET | `/addresses/empId/{empId}` | Get all addresses for an employee |
-
-**Address Types:** `PERMANENT`, `TEMPORARY`
-
----
-
-### Auth Service (`http://localhost:8083`)
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/auth/register-user` | Register a new user | No |
-| POST | `/auth/generate-token` | Login and generate JWT token | No |
-| GET | `/auth/**` | Other endpoints | Yes |
-
-**Sample Registration Request:**
-```json
 {
   "firstName": "John",
   "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "username": "johndoe",
-  "password": "password123",
-  "roles": ["USER"]
+  "email": "john@example.com",
+  "username": "john",
+  "password": "pass123",
+  "roles": "USER"
 }
 ```
 
-**Sample Login Request:**
+### 2) Generate JWT
+
+```http
+POST /auth/generate-token
+Host: localhost:9090
+Content-Type: application/json
+
+{
+  "username": "john",
+  "password": "pass123"
+}
+```
+
+Response includes:
+
+- `token`
+- `type` (Bearer)
+- `validUntil`
+
+## Core APIs (via Gateway)
+
+Use:
+
+- `Authorization: Bearer <your_token>`
+
+### Employee APIs
+
+- `POST /employee/save`
+- `PUT /employee/update/{id}`
+- `DELETE /employee/delete/{id}`
+- `GET /employee/{id}`
+- `GET /employee/all`
+- `GET /employee/get-by-emp-code-and-company-name?empCode=...&companyName=...`
+
+Sample create employee:
+
 ```json
 {
-  "username": "johndoe",
-  "password": "password123"
+  "empName": "Alice",
+  "empEmail": "alice@company.com",
+  "empCode": "EMP-1001",
+  "companyName": "ACME"
 }
 ```
 
----
+### Address APIs
 
-## 🗄️ Database Schema
+- `POST /addresses/save`
+- `PUT /addresses/update`
+- `GET /addresses/{addressId}`
+- `GET /addresses/all-address`
+- `DELETE /addresses/delete/{addressId}`
+- `GET /addresses/empId/{empId}`
 
-All services share the same MySQL database: `microservice_employee`
+Sample save/update address payload:
 
-### Tables
-
-**`employees`** - Managed by Employee Service
-- `id` (BIGINT, PK, AUTO_INCREMENT)
-- `emp_name` (VARCHAR)
-- `emp_email` (VARCHAR)
-- `emp_code` (VARCHAR)
-- `company_name` (VARCHAR)
-- Unique constraint: `(emp_code, company_name)`
-
-**`address`** - Managed by Address Service
-- `id` (BIGINT, PK, AUTO_INCREMENT)
-- `emp_id` (BIGINT, FK → employees.id)
-- `street` (VARCHAR)
-- `pin_code` (VARCHAR)
-- `city` (VARCHAR)
-- `country` (VARCHAR)
-- `address_type` (ENUM: PERMANENT, TEMPORARY)
-
-**`users`** - Managed by Auth Service
-- `id` (BIGINT, PK, AUTO_INCREMENT)
-- `first_name` (VARCHAR)
-- `last_name` (VARCHAR)
-- `email` (VARCHAR)
-- `username` (VARCHAR, UNIQUE)
-- `password` (VARCHAR, BCrypt encoded)
-- `roles` (VARCHAR)
-
----
-
-## 🔗 Service Communication
-
-### OpenFeign Clients
-
-**Employee → Address Service**
-- Uses Eureka service discovery
-- Calls `GET /addresses/empId/{empId}` to fetch employee addresses
-- Defined in: `AddressFeignClient`
-
-**Address → Employee Service**
-- Uses explicit URL configuration (`${employee.service.url}`)
-- Calls `GET /{id}` to validate employee existence
-- Defined in: `EmployeeFeignClient`
-- Includes custom `CustomErrorDecoder` for error handling
-
-### Communication Flow
-
-```
-Employee Service ──Feign──► Address Service
-     ▲                          │
-     │                          │
-     └───────Feign──────────────┘
+```json
+{
+  "empId": 1,
+  "addressRequestDtoList": [
+    {
+      "street": "Main Road",
+      "pinCode": 123456,
+      "city": "Pune",
+      "country": "India",
+      "addressType": "PERMANENT"
+    },
+    {
+      "street": "Work Street",
+      "pinCode": 654321,
+      "city": "Mumbai",
+      "country": "India",
+      "addressType": "TEMPORARY"
+    }
+  ]
+}
 ```
 
----
+## Notes
 
-## 📁 Project Structure
+- Employee and Address service methods include intentional `Thread.sleep(6000)` in some GET APIs to help test gateway circuit breaker behavior.
+- Address service validates employee existence before saving/updating addresses.
+- Employee service tries to enrich employee response with addresses and tolerates address-service failure.
 
-```
-Employee-Microservices-App/
-├── EurekaServer/                 # Service Registry (Port: 8761)
-│   ├── src/main/java/
-│   │   └── com.sadcodes.eurekaserver/
-│   │       ├── EurekaServerApplication.java
-│   │       └── config/
-│   ├── src/main/resources/
-│   │   └── application.yaml
-│   └── pom.xml
-│
-├── Employee/                     # Employee Service (Port: 8081)
-│   ├── src/main/java/
-│   │   └── com.sadcodes.employee/
-│   │       ├── EmployeeApplication.java
-│   │       ├── controller/
-│   │       ├── service/
-│   │       ├── repository/
-│   │       ├── model/
-│   │       ├── dto/
-│   │       ├── exception/
-│   │       └── config/
-│   ├── src/main/resources/
-│   │   └── application.yaml
-│   └── pom.xml
-│
-├── Address/                      # Address Service (Port: 8082)
-│   ├── src/main/java/
-│   │   └── com.sadcodes.address/
-│   │       ├── AddressApplication.java
-│   │       ├── controller/
-│   │       ├── service/
-│   │       ├── repository/
-│   │       ├── model/
-│   │       ├── dto/
-│   │       ├── exception/
-│   │       ├── feign/
-│   │       └── config/
-│   ├── src/main/resources/
-│   │   └── application.yml
-│   └── pom.xml
-│
-├── Auth/                         # Auth Service (Port: 8083)
-│   ├── src/main/java/
-│   │   └── com.sadcodes.auth/
-│   │       ├── AuthApplication.java
-│   │       ├── controller/
-│   │       ├── service/
-│   │       ├── repository/
-│   │       ├── model/
-│   │       ├── dto/
-│   │       ├── security/
-│   │       ├── jwt/
-│   │       └── config/
-│   ├── src/main/resources/
-│   │   └── application.yaml
-│   └── pom.xml
-│
-└── FIXES_SUMMARY.md              # Documentation of previous fixes
+## Running Tests
+
+Run tests per service:
+
+```powershell
+cd EurekaServer; .\mvnw.cmd test
+cd ..\Auth; .\mvnw.cmd test
+cd ..\Employee; .\mvnw.cmd test
+cd ..\Address; .\mvnw.cmd test
+cd ..\ApiGateway; .\mvnw.cmd test
 ```
 
----
+## Troubleshooting
 
-## 🔍 Troubleshooting
-
-**Services not showing in Eureka Dashboard:**
-- Ensure EurekaServer starts completely before other services
-- Check that all services have `eureka.client.register-with-eureka=true`
-- Verify network connectivity between services
-
-**Database Connection Issues:**
-- Verify MySQL is running on `localhost:3306`
-- Check database credentials in `application.yaml` files
-- Ensure database `microservice_employee` exists
-
-**Feign Client Errors:**
-- Ensure both Employee and Address services are running
-- Check `employee.service.url` configuration in Address service
-- Review logs for custom `CustomErrorDecoder` messages
-
-**JWT Authentication Issues:**
-- Verify the JWT secret in Auth service configuration
-- Ensure BCrypt encoder is properly configured
-- Check token expiration times
-
----
-
-## 📝 Notes
-
-- **Shared Database Pattern:** This project uses a shared database across services for simplicity. In production microservices, each service should ideally have its own dedicated database.
-- **Spring Boot 4.x:** This project uses the latest Spring Boot 4.x framework with Java 25.
-- **Service Discovery:** Employee service uses Eureka discovery for Address client, while Address service uses explicit URL for Employee client.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is created for educational purposes.
-
----
-
-## 👨‍💻 Author
-
-**Sadab Akhtar**
-
----
-
-For any issues or questions, please open an issue in the repository.
+- `401 Unauthorized` from gateway:
+  - Missing `Authorization` header
+  - Wrong header format (must start with `Bearer `)
+  - Invalid/expired JWT
+- Service not visible in Eureka:
+  - Ensure Eureka server is running first on port `8761`
+- MySQL connection errors:
+  - Verify DB exists and credentials in each service config
+- Fallback response returned:
+  - Downstream service is slow/unavailable and circuit breaker opened
